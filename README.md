@@ -4,6 +4,28 @@ Muon for R package (`rmuon`) is an experimental package to provide converters th
 
 `rmuon` implements a generic `WriteH5MU` function that currently works for Seurat objects (v3 and above) and MultiAssayExperiment objects.
 
+## Installation
+
+```R
+remotes::install_github("gtca/rmuon")
+```
+
+## Quick start
+
+Start with an existing dataset, e.g. a Seurat object with CITE-seq data:
+
+```R
+library(SeuratData)
+InstallData("bmcite")
+bm <- LoadData(ds = "bmcite")
+```
+`rmuon` allows to save the object into a `.h5mu` file:
+
+```R
+library(muon)
+WriteH5MU(muon, "bmcite.h5mu")
+```
+
 ## Relevant projects
 
 Other R packages for multimodal I/O include:
