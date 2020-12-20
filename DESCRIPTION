@@ -1,0 +1,14 @@
+Package: muon
+Title: Save Multimodal Data to h5mu Files
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Danila",
+           family = "Bredikhin",
+           role = c("aut", "cre"),
+           email = "danila.bredikhin@embl.de",
+           comment = c(ORCID = "0000-0001-8089-6983"))
+Description: Save multimodal data object to h5mu files supported by muon
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.0
