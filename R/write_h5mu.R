@@ -43,7 +43,7 @@ setMethod("WriteH5MU", "MultiAssayExperiment", function(object, file, overwrite)
     # X
     x <- object[[mod]]
     x <- x[,meta$colname]
-    h5[[paste0("mod/", mod, "/X")]] <- x
+    h5[[paste0("mod/", mod, "/X")]] <- assay(x)
     
     # .var
     var <- data.frame("mod" = rep(mod, nrow(x)), row.names = rownames(x), stringsAsFactors = FALSE)
