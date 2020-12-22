@@ -16,11 +16,13 @@ on:
 
 jobs:
   build:
-    runs-on: [ macos-latest, ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         r-version: [3.6, 4.0]
-
+        include:
+          - os: macos-latest
+          - os: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set up R ${{ matrix.r-version }}
