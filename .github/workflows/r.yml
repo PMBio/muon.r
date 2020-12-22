@@ -31,8 +31,9 @@ jobs:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
       - name: Install dependencies
         run: |
-          install.packages(c("remotes", "rcmdcheck", "testthat"))
+          install.packages(c("remotes", "rcmdcheck", "testthat", "BiocManager", "Seurat"))
           remotes::install_deps(dependencies = TRUE)
+          BiocManager::install("MultiAssayExperiment")
         shell: Rscript {0}
       - name: Check
         run: rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "error")
