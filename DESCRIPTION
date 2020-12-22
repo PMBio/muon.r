@@ -8,6 +8,8 @@ Authors@R:
            email = "danila.bredikhin@embl.de",
            comment = c(ORCID = "0000-0001-8089-6983"))
 Description: Save multimodal data object to h5mu files supported by muon
+Imports: hdf5r, Matrix
+Suggests: MultiAssayExperiment, Seurat
 License: GPL-3
 Encoding: UTF-8
 LazyData: true

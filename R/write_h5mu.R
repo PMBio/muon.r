@@ -4,10 +4,7 @@ setGeneric("WriteH5MU", function(object, file, overwrite = TRUE) standardGeneric
 #'
 #' @description Save MultiAssayExperiment object to .h5mu file
 #'
-#' @import rhdf5
 #' @import hdf5r
-#' @import dplyr
-#' @import MultiAssayExperiment
 #'
 #' @exportMethod WriteH5MU
 setMethod("WriteH5MU", "MultiAssayExperiment", function(object, file, overwrite) {
@@ -78,7 +75,6 @@ p_to_j <- function(p) {
 #' @description Save an assay to .h5ad / AnnData object
 #'
 #' @import hdf5r
-#' @import Seurat
 #' @importFrom Matrix t
 #'
 WriteH5ADHelper <- function(object, assay, root) {
@@ -209,6 +205,12 @@ WriteH5ADHelper <- function(object, assay, root) {
   TRUE
 }
 
+#' @details Fix HDF5 file attributes
+#'
+#' @description Fix encoding attributes
+#'
+#' @import hdf5r
+#' @import reticulate
 WriteH5ADFixer <- function(file) {
   library(reticulate)
   std <- import_builtins()
@@ -257,8 +259,6 @@ WriteH5ADFixer <- function(file) {
 #' @description Save Seurat object to .h5mu file
 #'
 #' @import hdf5r
-#' @import dplyr
-#' @import Seurat
 #'
 #' @exportMethod WriteH5MU
 setMethod("WriteH5MU", "Seurat", function(object, file, overwrite) {
