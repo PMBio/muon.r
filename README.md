@@ -12,6 +12,8 @@ remotes::install_github("gtca/rmuon")
 
 ## Quick start
 
+### Seurat objects
+
 Start with an existing dataset, e.g. a Seurat object with CITE-seq data:
 
 ```R
@@ -24,6 +26,15 @@ bm <- LoadData(ds = "bmcite")
 ```R
 library(muon)
 WriteH5MU(muon, "bmcite.h5mu")
+```
+
+### MultiAssayExperiment objects
+
+Start with a dataset, e.g. the `myMultiAssay` object from [the MAE vignette](https://www.bioconductor.org/packages/release/bioc/vignettes/MultiAssayExperiment/inst/doc/MultiAssayExperiment.html):
+
+```R
+library(muon)
+WriteH5MU(myMultiAssay, "myMultiAssay.h5mu")
 ```
 
 ## Relevant projects
