@@ -14,7 +14,7 @@ remotes::install_github("gtca/rmuon")
 
 ### Seurat objects
 
-Start with an existing dataset, e.g. a Seurat object with CITE-seq data:
+Start with an existing dataset, e.g. a [Seurat](https://github.com/satijalab/seurat) object with CITE-seq data:
 
 ```R
 library(SeuratData)
