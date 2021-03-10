@@ -25,7 +25,7 @@ bm <- LoadData(ds = "bmcite")
 
 ```R
 library(muon)
-WriteH5MU(muon, "bmcite.h5mu")
+WriteH5MU(bm, "bmcite.h5mu")
 ```
 
 ### MultiAssayExperiment objects
