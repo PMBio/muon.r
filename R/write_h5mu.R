@@ -22,7 +22,7 @@ setMethod("WriteH5MU", "MultiAssayExperiment", function(object, file, overwrite)
   h5attr(h5[["obs"]], "column-order") <- colnames(obs)
 
   modalities <- names(experiments(object))
-  
+
   h5$create_group("mod")
   vars <- lapply(modalities, function(mod) {
     h5$create_group(paste0("mod/", mod))
@@ -41,7 +41,7 @@ setMethod("WriteH5MU", "MultiAssayExperiment", function(object, file, overwrite)
     x <- object[[mod]]
     x <- x[,meta$colname]
     h5[[paste0("mod/", mod, "/X")]] <- assay(x)
-    
+
     # .var
     var <- data.frame("mod" = rep(mod, nrow(x)), row.names = rownames(x), stringsAsFactors = FALSE)
     var_columns <- colnames(var)
@@ -49,7 +49,7 @@ setMethod("WriteH5MU", "MultiAssayExperiment", function(object, file, overwrite)
     var <- var[,c("_index", var_columns)]
     h5[[paste0("mod/", mod, "/var")]] <- var
     h5attr(h5[[paste0("mod/", mod, "/var")]], "_index") <- "_index"
-    
+
     var
   })
 
@@ -128,8 +128,8 @@ WriteH5ADHelper <- function(object, assay, root) {
         counts_group$create_dataset("indptr", x_counts@p)
         counts_group$create_dataset("data", x_counts@x)
         h5attr(counts_group, "shape") <- dim(x_counts)
-        h5attr(counts_group, "encoding-type") <- sparse_type
-        h5attr(counts_group, "encoding-version") <- "0.1.0"
+        counts_group$create_attr("encoding-type", sparse_type, space=H5S$new("scalar"))
+        counts_group$create_attr("encoding-version", "0.1.0", space=H5S$new("scalar"))
       } else {
         # dense matrix
         root$create_dataset("X", x_counts)
@@ -148,8 +148,8 @@ WriteH5ADHelper <- function(object, assay, root) {
         counts_group[["indptr"]] <- x_counts@p
         counts_group[["data"]] <- x_counts@x
         h5attr(counts_group, "shape") <- dim(x_counts)
-        h5attr(counts_group, "encoding-type") <- sparse_type
-        h5attr(counts_group, "encoding-version") <- "0.1.0"
+        counts_group$create_attr("encoding-type", sparse_type, space=H5S$new("scalar"))
+        counts_group$create_attr("encoding-version", "0.1.0", space=H5S$new("scalar"))
       } else {
         # dense matrix
         layers_group$create_dataset("counts", x_counts)
@@ -172,8 +172,8 @@ WriteH5ADHelper <- function(object, assay, root) {
             data_group$create_dataset("indptr", x_data@p)
             data_group$create_dataset("data", x_data@x)
             h5attr(data_group, "shape") <- dim(x_data)
-            h5attr(data_group, "encoding-type") <- sparse_type
-            h5attr(data_group, "encoding-version") <- "0.1.0"
+            data_group$create_attr("encoding-type", sparse_type, space=H5S$new("scalar"))
+            data_group$create_attr("encoding-version", "0.1.0", space=H5S$new("scalar"))
           } else {
             # dense matrix
             raw_group$create_dataset("X", t(x_data))
@@ -189,8 +189,8 @@ WriteH5ADHelper <- function(object, assay, root) {
             data_group$create_dataset("indptr", x_data@p)
             data_group$create_dataset("data", x_data@x)
             h5attr(data_group, "shape") <- dim(x_data)
-            h5attr(data_group, "encoding-type") <- sparse_type
-            h5attr(data_group, "encoding-version") <- "0.1.0"
+            data_group$create_attr("encoding-type", sparse_type, space=H5S$new("scalar"))
+            data_group$create_attr("encoding-version", "0.1.0", space=H5S$new("scalar"))
           } else {
             # dense matrix
             root$create_dataset("X", x_data)
@@ -200,55 +200,7 @@ WriteH5ADHelper <- function(object, assay, root) {
       # 'data' should to be available when 'scale.data' is available
     }
   }
-  
 
-  TRUE
-}
-
-#' @details Fix HDF5 file attributes
-#'
-#' @description Fix encoding attributes
-#'
-#' @import hdf5r
-#' @import reticulate
-WriteH5ADFixer <- function(file) {
-  library(reticulate)
-  std <- import_builtins()
-  h5py <- import("h5py", convert = FALSE)
-
-  # py_run_string("e_type = 'csr_matrix'")
-  # py_run_string("e_version = '0.1.0'")  
-
-  h5 <- h5py$File(file, 'a')
-
-  if ('mod' %in% std$list(h5$keys())) {
-    mods <- std$list(h5[['mod']]$keys())
-    for (mod in mods) {
-      mod_object <- h5[['mod']][[mod]]
-      mod_object_keys <- std$list(mod_object$keys())
-      if ('X' %in% mod_object_keys) {
-        x <- mod_object[['X']]
-        # if sparse
-        if (std$isinstance(x, h5py$Group)) {
-          x$attrs$`__setitem__`('encoding-type', x$attrs$get('encoding-type')[0]$decode())
-          x$attrs$`__setitem__`('encoding-version', x$attrs$get('encoding-version')[0]$decode())
-        }
-      }
-      if ('layers' %in% mod_object_keys) {
-        layers <- std$list(mod_object[['layers']]$keys())
-        for (layer in layers) {
-          x <- mod_object[['layers']][[layer]]
-          # if sparse
-          if (std$isinstance(x, h5py$Group)) {
-            x$attrs$`__setitem__`('encoding-type', x$attrs$get('encoding-type')[0]$decode())
-            x$attrs$`__setitem__`('encoding-version', x$attrs$get('encoding-version')[0]$decode())
-          }
-        }
-      }
-    }
-  }
-
-  h5$close()
 
   TRUE
 }
@@ -276,7 +228,7 @@ setMethod("WriteH5MU", "Seurat", function(object, file, overwrite) {
   h5attr(obs_dataset, "column-order") <- obs_columns
 
   modalities <- Seurat::Assays(object)
-  
+
   h5$create_group("mod")
   vars <- lapply(modalities, function(mod) {
     mod_group <- h5$create_group(paste0("mod/", mod))
@@ -322,8 +274,6 @@ setMethod("WriteH5MU", "Seurat", function(object, file, overwrite) {
   # object@neighbors (k nearest neighbours)
 
   h5$close_all()
-
-  WriteH5ADFixer(file)
 
   TRUE
 })

@@ -2,5 +2,4 @@
 
 exportMethods(WriteH5MU)
 import(hdf5r)
-import(reticulate)
 importFrom(Matrix,t)
