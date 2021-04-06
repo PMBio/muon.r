@@ -21,7 +21,7 @@ library(SeuratData)
 InstallData("bmcite")
 bm <- LoadData(ds = "bmcite")
 ```
-`muon` allows to save the object into a `.h5mu` file:
+`muon.r` allows to save the object into a `.h5mu` file:
 
 ```R
 library(muon)
