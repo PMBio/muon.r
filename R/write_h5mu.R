@@ -3,6 +3,9 @@ setGeneric("WriteH5MU", function(object, file, overwrite = TRUE) standardGeneric
 #' @details MultiAssayExperiment-helpers
 #'
 #' @description Save MultiAssayExperiment object to .h5mu file
+#' Please note than the primary key is used as obs_names 
+#' so the behaviour of WriteH5MU when there are multiple samples
+#' for one primary key is not guaranteed.
 #'
 #' @import hdf5r
 #'
@@ -23,17 +26,26 @@ setMethod("WriteH5MU", "MultiAssayExperiment", function(object, file, overwrite)
 
   h5$create_group("mod")
   vars <- lapply(modalities, function(mod) {
-    h5$create_group(paste0("mod/", mod))
+    mod_group <- h5$create_group(paste0("mod/", mod))
     # .obs
     meta <- sampleMap(object)[sampleMap(object)$assay == mod,]
-    obs <- as.data.frame(colData(object)[meta$primary,], stringsAsFactors = FALSE)
+    # obs <- as.data.frame(colData(object)[meta$primary,], stringsAsFactors = FALSE)
+    obs_global <- as.data.frame(colData(object)[meta$primary,], stringsAsFactors = FALSE)
+    obs <- data.frame(row.names=rownames(obs_global))
+    if (is(object[[mod]], "SummarizedExperiment")) {
+      obs_local <- colData(object[[mod]])
+      obs_local <- obs_local[meta$colname,,drop=FALSE]
+      obs <- cbind(obs, obs_local)
+    }
+    obs <- data.frame(obs, stringsAsFactors = FALSE)
     obs_columns <- colnames(obs)
     obs[["_index"]] <- rownames(obs)
     obs <- obs[,c("_index", obs_columns)]
 
-    h5[[paste0("mod/", mod, "/obs")]] <- obs
-    h5attr(h5[[paste0("mod/", mod, "/obs")]], "_index") <- "_index"
-    h5attr(h5[[paste0("mod/", mod, "/obs")]], "column-order") <- obs_columns
+    obs_dataset <- mod_group$create_dataset("obs", obs)
+    h5attr(obs_dataset, "_index") <- "_index"
+    if (length(obs_columns) > 0)
+      h5attr(obs_dataset, "column-order") <- obs_columns
 
     # X
     x <- object[[mod]]

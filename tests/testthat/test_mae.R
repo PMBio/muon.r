@@ -24,12 +24,12 @@ test_that("a model can be created from a simple MAE object", {
                           assay=c("array1", "array2", "array3", "array4"),
                           stringsAsFactors = FALSE)
 
-    methyldat <- matrix(1:10, ncol=5,
+    methyldat <- matrix(1:8, ncol=4,
                         dimnames=list(c("ENST00000355076", "ENST00000383706"),
                                       c("methyl1", "methyl2", "methyl3",
-                                        "methyl4", "methyl5")))
-    methylmap <- data.frame(primary = c("Jack", "Jack", "Jill", "Barbara", "Bob"),
-                            assay = c("methyl1", "methyl2", "methyl3", "methyl4", "methyl5"),
+                                        "methyl4")))
+    methylmap <- data.frame(primary = c("Jack", "Jill", "Barbara", "Bob"),
+                            assay = c("methyl1", "methyl2", "methyl3", "methyl4"),
                             stringsAsFactors = FALSE)
 
     microdat <- matrix(201:212, ncol=3,
