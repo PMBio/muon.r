@@ -12,13 +12,11 @@ setMethod("WriteH5MU", "MultiAssayExperiment", function(object, file, overwrite)
 
   obs <- as.data.frame(colData(object), stringsAsFactors = FALSE)
   obs[["_index"]] <- rownames(obs)
+  obs_columns <- colnames(obs)
+  obs <- obs[,c("_index", obs_columns)]
 
   h5[["obs"]] <- obs
-  # h5$create_group("obs")
-  # for (column in colnames(obs)) {
-  #   h5[[paste0("obs/", column)]] <- obs[[column]]
-  # }
-  h5attr(h5[["obs"]], "_index") <- rownames(obs)
+  h5attr(h5[["obs"]], "_index") <- "_index"
   h5attr(h5[["obs"]], "column-order") <- colnames(obs)
 
   modalities <- names(experiments(object))
@@ -63,14 +61,6 @@ setMethod("WriteH5MU", "MultiAssayExperiment", function(object, file, overwrite)
 
   TRUE
 })
-
-
-p_to_j <- function(p) {
-  unlist(lapply(seq(length(p) - 1), function(i) {
-    rep(i - 1, p[i+1] - p[i])
-  }))
-}
-
 
 #' @description Save an assay to .h5ad / AnnData object
 #'
