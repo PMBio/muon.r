@@ -35,12 +35,13 @@ setMethod("WriteH5MU", "MultiAssayExperiment", function(object, file, overwrite)
     if (is(object[[mod]], "SummarizedExperiment")) {
       obs_local <- colData(object[[mod]])
       obs_local <- obs_local[meta$colname,,drop=FALSE]
-      obs <- cbind(obs, obs_local)
+      if (ncol(obs_local) > 0)
+        obs <- cbind(obs, obs_local)
     }
     obs <- data.frame(obs, stringsAsFactors = FALSE)
     obs_columns <- colnames(obs)
     obs[["_index"]] <- rownames(obs)
-    obs <- obs[,c("_index", obs_columns)]
+    obs <- obs[,c("_index", obs_columns),drop=FALSE]
 
     obs_dataset <- mod_group$create_dataset("obs", obs)
     h5attr(obs_dataset, "_index") <- "_index"
