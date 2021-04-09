@@ -1,8 +1,11 @@
 context("Creating .h5mu files from MultiAssayExperiment objects")
 library(MultiAssayExperiment)
+library(SingleCellExperiment)
 library(muon)
 library(hdf5r)
 library(fs)  # for file_temp()
+
+fileh5mu <- paste0(file_temp(), ".h5mu")
 
 test_that("a model can be created from a simple MAE object", {
     # This is adapted from
@@ -19,7 +22,8 @@ test_that("a model can be created from a simple MAE object", {
                                      c("array1", "array2", "array3", "array4")))
     coldat <- data.frame(slope53=rnorm(4),
                          row.names=c("array1", "array2", "array3", "array4"))
-    exprdat <- SummarizedExperiment(arraydat, colData=coldat)
+    exprdimred <- list("pca"=matrix(10:17, ncol=2))
+    exprdat <- SingleCellExperiment(arraydat, colData=coldat, reducedDims=exprdimred)
     exprmap <- data.frame(primary=rownames(patient.data)[c(1, 2, 4, 3)],
                           assay=c("array1", "array2", "array3", "array4"),
                           stringsAsFactors = FALSE)
@@ -70,7 +74,7 @@ test_that("a model can be created from a simple MAE object", {
     myMultiAssay <- MultiAssayExperiment(objlist, patient.data, dfmap)
 
     # Writing
-    outfile <- paste0(file_temp(), ".h5mu")
+    outfile <- fileh5mu
     result <- WriteH5MU(myMultiAssay, outfile)
 
     # Assert the data is saved
@@ -84,6 +88,12 @@ test_that("a model can be created from a simple MAE object", {
     assays_orig <- sort(names(assays(myMultiAssay)))
     expect_equal(assays, assays_orig)
 
-
     h5$close_all()
+})
+
+
+test_that("a MAE object can be created from an .h5mu file", {
+    mae <- ReadH5MU(fileh5mu, "mae")
+    expect_equal(names(mae)[1], "Affy")
+    expect_equal(length(reducedDims(mae[["Affy"]])), 1)
 })

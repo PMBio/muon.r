@@ -27,9 +27,9 @@ setMethod("WriteH5MU", "MultiAssayExperiment", function(object, file, overwrite)
   h5$create_group("mod")
   vars <- lapply(modalities, function(mod) {
     mod_group <- h5$create_group(paste0("mod/", mod))
+
     # .obs
     meta <- sampleMap(object)[sampleMap(object)$assay == mod,]
-    # obs <- as.data.frame(colData(object)[meta$primary,], stringsAsFactors = FALSE)
     obs_global <- as.data.frame(colData(object)[meta$primary,], stringsAsFactors = FALSE)
     obs <- data.frame(row.names=rownames(obs_global))
     if (is(object[[mod]], "SummarizedExperiment")) {
@@ -47,6 +47,17 @@ setMethod("WriteH5MU", "MultiAssayExperiment", function(object, file, overwrite)
     h5attr(obs_dataset, "_index") <- "_index"
     if (length(obs_columns) > 0)
       h5attr(obs_dataset, "column-order") <- obs_columns
+
+    # .obsm
+    if (is(object[[mod]], "SingleCellExperiment")) {
+      obsm <- reducedDims(object[[mod]])
+      if (length(obsm) > 0) {
+        mod_obsm <- mod_group$create_group("obsm")
+        lapply(names(obsm), function(space) {
+          mod_obsm[[space]] <- obsm[[space]]
+        })
+      }
+    }
 
     # X
     x <- object[[mod]]
