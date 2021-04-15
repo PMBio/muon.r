@@ -1,8 +1,8 @@
 # muon accessibility R package
 
-Muon for R is an experimental package to provide converters that allow to save R objects with multimodal data to `.h5mu` files that can be further integrated into workflows in multiple programming languages, including [`muon` Python library](https://github.com/gtca/muon).
+Muon for R is an experimental package to provide functionality to save R objects with multimodal data to `.h5mu` files that can be further integrated into workflows in multiple programming languages, including [`muon` Python library](https://github.com/gtca/muon), as well as to read `.h5mu` files into R objects.
 
-`muon.r` implements a generic `WriteH5MU` function that currently works for Seurat objects (v3 and above) and MultiAssayExperiment objects.
+`muon.r` implements a generic `WriteH5MU` function that currently works for Seurat objects (v3 and above) and MultiAssayExperiment objects. `ReadH5MU` function allows to make a Seurat or a MultiAssayExperiment object with the data from the `.h5mu` file.
 
 ## Installation
 
