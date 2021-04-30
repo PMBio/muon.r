@@ -40,6 +40,8 @@ read_with_index <- function(dataset) {
   table
 }
 
+OBSM2VARM <- list("X_pca" = "PCs", "X_mofa" = "LFs")
+
 #' @details MultiAssayExperiment-helpers
 #'
 #' @description Create a MultiAssayExperiment or a Seurat object from the .h5mu file
@@ -124,8 +126,9 @@ ReadH5MU <- function(file, as) {
 
     # Create global metadata
     metadata <- read_with_index(h5[["obs"]])
+    ft_metadata <- read_with_index(h5[["var"]])
 
-    # Create embeddings
+    # Get embeddings
     if ("obsm" %in% names(h5)) {
       obsm_names <- names(h5[["obsm"]])
       obsm_names <- obsm_names[!(obsm_names %in% assays)]
@@ -137,6 +140,20 @@ ReadH5MU <- function(file, as) {
       names(embeddings) <- obsm_names
     } else {
       embeddings <- list()
+    }
+
+    # Get loadings
+    if ("varm" %in% names(h5)) {
+      varm_names <- names(h5[["varm"]])
+      varm_names <- varm_names[!(varm_names %in% assays)]
+      loadings <- lapply(varm_names, function(space) {
+        ld <- t(h5[["varm"]][[space]]$read())
+        rownames(ld) <- rownames(ft_metadata)
+        ld
+      })
+      names(loadings) <- varm_names
+    } else {
+      loadings <- list()
     }
     
     # mod/.../X
@@ -176,15 +193,32 @@ ReadH5MU <- function(file, as) {
         # these will be added when concatenating lists
         # names(obsm) <- paste(mod, names(view[["obsm"]]), sep="_")
         names(obsm) <- names(view[["obsm"]])
-        obsm
       }
 
       obsm
     })
     names(mod_obsm) <- assays
-    mod_obsm <- do.call(c, mod_obsm)
-    
-    embeddings <- c(embeddings, mod_obsm)
+
+    # mod/.../varm
+    mod_varm <- lapply(assays, function(mod) {
+      view <- h5[['mod']][[mod]]
+
+      var <- read_with_index(view[['var']])
+      if (is("var", "data.frame"))
+        rownames(var) <- paste(mod, rownames(var), sep="-")
+
+      if ("varm" %in% names(view)) {
+        varm <- lapply(names(view[["varm"]]), function(space) {
+          emb <- t(view[["varm"]][[space]]$read())
+          rownames(emb) <- rownames(var)
+          emb
+        })
+        names(varm) <- names(view[["varm"]])
+      }
+
+      varm
+    })
+    names(mod_varm) <- assays
 
     # Only common observations can be read
     obs_names <- Reduce(intersect, lapply(modalities, colnames))
@@ -195,9 +229,42 @@ ReadH5MU <- function(file, as) {
       srt[[modality]] <- subset(modalities[[modality]], cells = obs_names)
     }
 
-    # Add embeddings
+    # Add joint embeddings
     for (emb in names(embeddings)) {
-      srt@reductions[[emb]] <- embeddings[[emb]][obs_names,,drop=FALSE]
+      emb_name <- toupper(gsub('X_', '', emb))
+
+      maybe_loadings <- matrix()
+      if (emb %in% names(OBSM2VARM)) {
+        varm_key = OBSM2VARM[[emb]]
+        maybe_loadings <- loadings[[varm_key]]
+      } 
+      srt[[emb_name]] <- CreateDimReducObject(
+        embeddings = embeddings[[emb]][obs_names,,drop=FALSE], 
+        loadings = maybe_loadings,
+        key = paste0(emb_name, "_"),
+        assay = DefaultAssay(srt),  # this is not true but an existing assay must be provided
+      )
+    }
+
+    # Add modality-specific embeddings
+    for (mod in names(mod_obsm)) {
+      mod_embeddings <- mod_obsm[[mod]]
+      for (emb in names(mod_embeddings)) {
+        emb_name <- paste(mod, toupper(gsub('X_', '', emb)), sep = "")
+
+        maybe_loadings <- matrix()
+        if (emb %in% names(OBSM2VARM)) {
+          varm_key = OBSM2VARM[[emb]]
+          maybe_loadings <- mod_varm[[mod]][[varm_key]]
+        }
+
+        srt[[emb_name]] <- CreateDimReducObject(
+          embeddings = mod_embeddings[[emb]][obs_names,,drop=FALSE],
+          loadings = maybe_loadings,
+          key = paste0(emb_name, "_"), 
+          assay = mod,
+        )
+      }
     }
 
     # Close the connection
