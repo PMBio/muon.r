@@ -37,6 +37,19 @@ library(muon)
 WriteH5MU(myMultiAssay, "myMultiAssay.h5mu")
 ```
 
+### Reading files
+
+Data from `.h5mu` files can be read into `Seurat` or `MultiAssayExperiment` objects:
+
+```R
+bm <- ReadH5MU("bmcite.h5mu", "seurat")
+```
+
+```R
+ReadH5MU("myMultiAssay.h5mu", "mae")
+```
+
+
 ## Relevant projects
 
 Other R packages for multimodal I/O include:
