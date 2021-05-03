@@ -12,6 +12,8 @@ remotes::install_github("gtca/muon.r")
 
 ## Quick start
 
+Seurat or MultiAssayExperiment objects can be serialized into `.h5mu` files.
+
 ### Seurat objects
 
 Start with an existing dataset, e.g. a [Seurat](https://github.com/satijalab/seurat) object with CITE-seq data:
@@ -39,16 +41,23 @@ WriteH5MU(myMultiAssay, "myMultiAssay.h5mu")
 
 ### Reading files
 
-Data from `.h5mu` files can be read into `Seurat` or `MultiAssayExperiment` objects:
+Data from `.h5mu` files can be read into Seurat or MultiAssayExperiment objects.
+
+#### Seurat objects
 
 ```R
 bm <- ReadH5MU("bmcite.h5mu", "seurat")
 ```
 
+Please not that only the intersection of samples (cells) is currently loaded into the Seurat object due to the object structure limitation.
+
+#### MultiAssayExperiment objects
+
 ```R
 ReadH5MU("myMultiAssay.h5mu", "mae")
 ```
 
+Please not that some of the fields such as multimodal embeddings (global `.obsm` slot) are not read into the MultiAssayExperiment object due to the object structure limitations.
 
 ## Relevant projects
 
