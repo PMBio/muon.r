@@ -49,7 +49,7 @@ Data from `.h5mu` files can be read into Seurat or MultiAssayExperiment objects.
 bm <- ReadH5MU("bmcite.h5mu", "seurat")
 ```
 
-Please not that only the intersection of samples (cells) is currently loaded into the Seurat object due to the object structure limitation.
+Please note that only the intersection of cells is currently loaded into the Seurat object due to the object structure limitation. Multimodal embeddings (global `.obsm` slot) are loaded with the `assay.used` field set to the default assay. Embeddings names are changed in order to comply with R & Seurat requirements and conventions.
 
 #### MultiAssayExperiment objects
 
@@ -57,7 +57,7 @@ Please not that only the intersection of samples (cells) is currently loaded int
 ReadH5MU("myMultiAssay.h5mu", "mae")
 ```
 
-Please not that some of the fields such as multimodal embeddings (global `.obsm` slot) are not read into the MultiAssayExperiment object due to the object structure limitations.
+Please note that some of the fields such as multimodal embeddings (global `.obsm` slot) are not read into the MultiAssayExperiment object due to the object structure limitations.
 
 ## Relevant projects
 
