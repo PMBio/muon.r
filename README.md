@@ -12,9 +12,13 @@ remotes::install_github("gtca/muon.r")
 
 ## Quick start
 
+`muon.r` provides a set of I/O operations for multimodal data.
+
+### Writing files
+
 Seurat or MultiAssayExperiment objects can be serialized into `.h5mu` files.
 
-### Seurat objects
+#### Seurat objects
 
 Start with an existing dataset, e.g. a [Seurat](https://github.com/satijalab/seurat) object with CITE-seq data:
 
@@ -30,7 +34,7 @@ library(muon)
 WriteH5MU(bm, "bmcite.h5mu")
 ```
 
-### MultiAssayExperiment objects
+#### MultiAssayExperiment objects
 
 Start with a dataset, e.g. the `myMultiAssay` object from [the MAE vignette](https://www.bioconductor.org/packages/release/bioc/vignettes/MultiAssayExperiment/inst/doc/MultiAssayExperiment.html):
 
