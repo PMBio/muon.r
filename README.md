@@ -58,7 +58,7 @@ Please note that only the intersection of cells is currently loaded into the Seu
 #### MultiAssayExperiment objects
 
 ```R
-ReadH5MU("myMultiAssay.h5mu", "mae")
+myMultiAssay <- ReadH5MU("myMultiAssay.h5mu", "mae")
 ```
 
 Please note that some of the fields such as multimodal embeddings (global `.obsm` slot) are not read into the MultiAssayExperiment object due to the object structure limitations.
