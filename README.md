@@ -1,8 +1,10 @@
-# muon accessibility R package
+# muon for R
 
-Muon for R is an experimental package to provide functionality to save R objects with multimodal data to `.h5mu` files that can be further integrated into workflows in multiple programming languages, including [`muon` Python library](https://github.com/gtca/muon), as well as to read `.h5mu` files into R objects.
+Muon for R (`muon.r`) is an experimental package to provide I/O functionality for `.h5mu` files and Seurat/MultiAssayExperiment objects. 
 
-`muon.r` implements a generic `WriteH5MU` function that currently works for Seurat objects (v3 and above) and MultiAssayExperiment objects. `ReadH5MU` function allows to make a Seurat or a MultiAssayExperiment object with the data from the `.h5mu` file.
+`muon.r` saves R objects with multimodal data to `.h5mu` files that can be further integrated into workflows in multiple programming languages, including the [`muon` Python library](https://github.com/gtca/muon) and the [`Muon.jl` Julia library](https://github.com/gtca/Muon.jl). `muon.r` also reads `.h5mu` files into R objects. 
+
+You can learn more about multimodal data containers in the [`muon` documentation](https://muon.readthedocs.io/en/latest/io/mudata.html).
 
 ## Installation
 
@@ -13,6 +15,8 @@ remotes::install_github("gtca/muon.r")
 ## Quick start
 
 `muon.r` provides a set of I/O operations for multimodal data.
+
+`muon.r` implements a generic `WriteH5MU` function that currently works for Seurat objects (v3 and above) and MultiAssayExperiment objects. `ReadH5MU` function allows to make a Seurat or a MultiAssayExperiment object with the data from the `.h5mu` file.
 
 ### Writing files
 
@@ -27,6 +31,7 @@ library(SeuratData)
 InstallData("bmcite")
 bm <- LoadData(ds = "bmcite")
 ```
+
 `muon.r` allows to save the object into a `.h5mu` file:
 
 ```R
