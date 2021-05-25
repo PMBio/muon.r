@@ -193,6 +193,8 @@ ReadH5MU <- function(file, as) {
         # these will be added when concatenating lists
         # names(obsm) <- paste(mod, names(view[["obsm"]]), sep="_")
         names(obsm) <- names(view[["obsm"]])
+      } else {
+	obsm <- list()
       }
 
       obsm
@@ -214,6 +216,8 @@ ReadH5MU <- function(file, as) {
           emb
         })
         names(varm) <- names(view[["varm"]])
+      } else {
+	varm <- list()
       }
 
       varm
