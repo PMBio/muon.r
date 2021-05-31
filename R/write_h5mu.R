@@ -313,8 +313,7 @@ write_data_frame <- function(attr_group, attr_df) {
     attr_group$create_attr("column-order", attr_columns)
   } else {
     # When there are no columns, null buffer can't be written to a file.
-    # The best we can do is to indicate that the index as also a column.
-    attr_group$create_attr("column-order", "_index")
+    attr_group$create_attr("column-order", dtype=h5types$H5T_NATIVE_DOUBLE, space=H5S$new("simple", 0, 0))
   }
   
 }
