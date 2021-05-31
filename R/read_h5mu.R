@@ -55,14 +55,14 @@ ReadH5MU <- function(file, as) {
     library(MultiAssayExperiment)
 
     # Connect to the the file
-    h5 <- H5File$new(file, mode="r")
+    h5 <- open_and_check_mudata(file)
 
     # Check all the assays are written
     assays <- h5[['mod']]$names
 
     # Create global colData
     metadata <- read_with_index(h5[['obs']])
-    
+
     # Create an experiments list
     modalities <- lapply(assays, function(mod) {
       view <- h5[['mod']][[mod]]
@@ -115,11 +115,11 @@ ReadH5MU <- function(file, as) {
 
     mae
   } else if (as %in% c("seurat")) {
-    
+
     library(Seurat)
 
     # Connect to the the file
-    h5 <- H5File$new(file, mode="r")
+    h5 <- open_and_check_mudata(file)
 
     # Check all the assays are written
     assays <- h5[['mod']]$names

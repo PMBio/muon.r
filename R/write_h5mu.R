@@ -11,7 +11,7 @@ setGeneric("WriteH5MU", function(object, file, overwrite = TRUE) standardGeneric
 #'
 #' @exportMethod WriteH5MU
 setMethod("WriteH5MU", "MultiAssayExperiment", function(object, file, overwrite) {
-  h5 <- H5File$new(file, mode="w")
+  h5 <- open_h5(file)
 
   obs <- as.data.frame(colData(object), stringsAsFactors = FALSE)
   obs[["_index"]] <- rownames(obs)
@@ -81,7 +81,7 @@ setMethod("WriteH5MU", "MultiAssayExperiment", function(object, file, overwrite)
   h5attr(h5[["var"]], "column-order") <- colnames(var)
 
 
-  h5$close_all()
+  finalize_mudata(h5)
 
   TRUE
 })
@@ -215,6 +215,8 @@ WriteH5ADHelper <- function(object, assay, root) {
     }
   }
 
+  finalize_anndata_internal(root)
+
 
   TRUE
 }
@@ -228,7 +230,7 @@ WriteH5ADHelper <- function(object, assay, root) {
 #'
 #' @exportMethod WriteH5MU
 setMethod("WriteH5MU", "Seurat", function(object, file, overwrite) {
-  h5 <- H5File$new(file, mode="w")
+  h5 <- open_h5(file)
 
   # .obs
   obs <- object@meta.data
@@ -287,7 +289,7 @@ setMethod("WriteH5MU", "Seurat", function(object, file, overwrite) {
   # object@graphs (sparse)
   # object@neighbors (k nearest neighbours)
 
-  h5$close_all()
+  finalize_mudata(h5)
 
   TRUE
 })
