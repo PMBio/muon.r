@@ -23,6 +23,23 @@ read_with_index <- function(dataset) {
       rownames(table) <- table[,indexcol,drop=TRUE]
       table <- table[,!colnames(table) %in% c(indexcol),drop=FALSE]
     }
+
+    # Make factors out of categorical data
+    # FIXME: References should be looked at
+    if ("__categories" %in% names(dataset)) {
+      cats <- dataset[["__categories"]]
+      for (cat in names(cats)) {
+        table[[cat]] <- factor(as.integer(table[[cat]]) + 1, labels = cats[[cat]]$read())
+      }
+    }
+
+    # Fix column order
+    if ("column-order" %in% names(dataset_attr)) {
+      ordered_columns <- dataset_attr[["column-order"]]
+      # Do not consider index as a column
+      ordered_columns <- ordered_columns[ordered_columns != indexcol]
+      table <- table[,ordered_columns[ordered_columns %in% columns],drop=FALSE]
+    }
   } else {
     table <- dataset$read()
     dataset_attr <- h5attributes(dataset)
@@ -40,13 +57,34 @@ read_with_index <- function(dataset) {
   table
 }
 
+read_matrix <- function(dataset) {
+  if ("data" %in% names(dataset) && "indices" %in% names(dataset) && "indptr" %in% names(dataset)) {
+      i <- dataset[["indices"]]$read()
+      p <- dataset[["indptr"]]$read()
+      x <- dataset[["data"]]$read()
+      if ("shape" %in% h5attr_names(dataset)) {
+        X_dims <- h5attr(dataset, "shape")
+      } else {
+        X_dims <- c(max(i), max(p))
+      }
+      X <- Matrix(0, X_dims[1], X_dims[2])
+      X@i <- i
+      X@p <- p
+      X@x <- x
+      t(X)
+    } else {
+      dataset$read()
+    }
+}
+
+
 OBSM2VARM <- list("X_pca" = "PCs", "X_mofa" = "LFs")
 
 #' @details MultiAssayExperiment-helpers
 #'
 #' @description Create a MultiAssayExperiment or a Seurat object from the .h5mu file
 #'
-#' @import hdf5r
+#' @import hdf5r, Matrix
 #'
 #' @exportMethod ReadH5MU
 ReadH5MU <- function(file, as) {
@@ -66,7 +104,7 @@ ReadH5MU <- function(file, as) {
     # Create an experiments list
     modalities <- lapply(assays, function(mod) {
       view <- h5[['mod']][[mod]]
-      X <- view[['X']]$read()
+      X <- read_matrix(view[['X']])
 
       var <- read_with_index(view[['var']])
 
@@ -159,7 +197,8 @@ ReadH5MU <- function(file, as) {
     # mod/.../X
     modalities <- lapply(assays, function(mod) {
       view <- h5[['mod']][[mod]]
-      X <- view[['X']]$read()
+
+      X <- read_matrix(view[['X']])
 
       var <- read_with_index(view[['var']])
 
@@ -194,7 +233,7 @@ ReadH5MU <- function(file, as) {
         # names(obsm) <- paste(mod, names(view[["obsm"]]), sep="_")
         names(obsm) <- names(view[["obsm"]])
       } else {
-	obsm <- list()
+	       obsm <- list()
       }
 
       obsm
@@ -217,7 +256,7 @@ ReadH5MU <- function(file, as) {
         })
         names(varm) <- names(view[["varm"]])
       } else {
-	varm <- list()
+        varm <- list()
       }
 
       varm

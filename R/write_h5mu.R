@@ -1,4 +1,5 @@
 setGeneric("WriteH5MU", function(object, file, overwrite = TRUE) standardGeneric("WriteH5MU"))
+setGeneric("WriteH5AD", function(object, assay, file, overwrite = TRUE) standardGeneric("WriteH5AD"))
 
 #' @details MultiAssayExperiment-helpers
 #'
@@ -86,6 +87,11 @@ setMethod("WriteH5MU", "MultiAssayExperiment", function(object, file, overwrite)
   TRUE
 })
 
+# setMethod("WriteH5AD", "MultiAssayExperiment", function(object, assay, file, overwrite) {
+#   h5 <- open_h5(file)
+
+
+
 #' @description Save an assay to .h5ad / AnnData object
 #'
 #' @import hdf5r
@@ -96,37 +102,23 @@ WriteH5ADHelper <- function(object, assay, root) {
   mod_object <- Seurat::GetAssay(object, assay)
 
   # .obs
-  obs <- object@meta.data
-  obs_columns <- colnames(obs)
-
-
-  obs["_index"] <- rownames(obs)
-  obs <- obs[,c("_index", obs_columns)]
-  obs_dataset <- root$create_dataset("obs", obs)
-
-  h5attr(obs_dataset, "_index") <- "_index"
-  if (length(obs_columns) > 0) {
-    h5attr(obs_dataset, "column-order") <- obs_columns
-  }
+  obs_group <- root$create_group("obs")
+  # There is no local metadata in Seurat objects
+  obs_names <- colnames(object)
+  obs <- data.frame(row.names = obs_names)
+  write_data_frame(obs_group, obs)
 
   # .var
   var <- mod_object@meta.features
 
   # Define highly variable features, if any
   if ('var.features' %in% slotNames(mod_object)) {
-    print("Defining highly variable features...")
+    message("Defining highly variable features...")
     var$highly_variable <- rownames(var) %in% mod_object@var.features
   }
 
-  var_columns <- colnames(var)
-  var["_index"] <- rownames(var)
-  var <- var[,c("_index", var_columns)]
-  var_dataset <- root$create_dataset("var", var)
-
-  h5attr(var_dataset, "_index") <- "_index"
-  if (length(var_columns) > 0) {
-    h5attr(var_dataset, "column-order") <- var_columns
-  }
+  var_group <- root$create_group("var")
+  write_data_frame(var_group, var)
 
   # .X, .layers['counts']. .raw.X
   if ('counts' %in% slotNames(mod_object)) {
@@ -233,38 +225,27 @@ setMethod("WriteH5MU", "Seurat", function(object, file, overwrite) {
   h5 <- open_h5(file)
 
   # .obs
+  obs_group <- h5$create_group("obs")
   obs <- object@meta.data
-  obs_columns <- colnames(obs)
 
-  obs["_index"] <- rownames(obs)
-  obs <- obs[,c("_index", obs_columns)]
-  obs_dataset <- h5$create_dataset("obs", obs)
-
-  h5attr(obs_dataset, "_index") <- "_index"
-  h5attr(obs_dataset, "column-order") <- obs_columns
+  write_data_frame(obs_group, obs)
 
   modalities <- Seurat::Assays(object)
 
   h5$create_group("mod")
-  vars <- lapply(modalities, function(mod) {
+  var_names <- lapply(modalities, function(mod) {
     mod_group <- h5$create_group(paste0("mod/", mod))
 
     WriteH5ADHelper(object, mod, mod_group)
 
     mod_object <- object[[mod]]
-    var <- mod_object@meta.features[,0,drop=FALSE]
-    var["_index"] <- rownames(var)
-    var
-
+    rownames(mod_object)
   })
 
-  # global .var
-  var <- do.call(rbind, lapply(vars, function(var) var[,,drop=FALSE]))
-  # h5[["var"]] <- var
-  # h5attr(h5[["var"]], "_index") <- "_index"
-
-  var_dataset <- h5$create_dataset("var", var)
-  h5attr(var_dataset, "_index") <- "_index"
+  # global .var will only contain rownames
+  var <- data.frame(row.names = do.call(c, var_names))
+  var_group <- h5$create_group("var")
+  write_data_frame(var_group, var)
 
   # .obsm
   if ('reductions' %in% slotNames(object)) {
@@ -294,3 +275,45 @@ setMethod("WriteH5MU", "Seurat", function(object, file, overwrite) {
   TRUE
 })
 
+
+write_data_frame <- function(attr_group, attr_df) {
+  attr_columns <- colnames(attr_df)
+
+  attr_df["_index"] <- rownames(attr_df)
+
+  attr_df <- attr_df[,c("_index", attr_columns),drop=FALSE]
+
+  categories <- list()
+  for (col in colnames(attr_df)) {
+    v <- attr_df[[col]]
+    if ("factor" %in% class(v)) {
+      # Write a factor
+      categories[[col]] <- levels(v)
+      attr_group$create_dataset(col, as.numeric(v) - 1)
+    } else {
+      attr_group$create_dataset(col, v)
+    }
+  }
+  if (length(categories) > 0) {
+    cats <- attr_group$create_group("__categories")
+    for (cat in names(categories)) {
+      cat_dataset <- cats$create_dataset(cat, categories[[cat]])
+      cat_dataset$create_attr("ordered", FALSE, space = H5S$new("scalar"))
+      # FIXME
+      # attr_group[[cat]]$create_attr("categories", cats$create_reference(cat))
+    }
+  }
+
+  # Write attributes
+  attr_group$create_attr("_index", "_index", space = H5S$new("scalar"))
+  attr_group$create_attr("encoding-type", "dataframe", space = H5S$new("scalar"))
+  attr_group$create_attr("encoding-version", "0.1.0", space = H5S$new("scalar"))
+  if (length(attr_columns) > 0) {
+    attr_group$create_attr("column-order", attr_columns)
+  } else {
+    # When there are no columns, null buffer can't be written to a file.
+    # The best we can do is to indicate that the index as also a column.
+    attr_group$create_attr("column-order", "_index")
+  }
+  
+}
