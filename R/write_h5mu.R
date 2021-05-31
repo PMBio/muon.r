@@ -289,7 +289,7 @@ write_data_frame <- function(attr_group, attr_df) {
     if ("factor" %in% class(v)) {
       # Write a factor
       categories[[col]] <- levels(v)
-      attr_group$create_dataset(col, as.numeric(v) - 1)
+      attr_group$create_dataset(col, as.integer(v) - 1, dtype = h5types$H5T_NATIVE_INT)
     } else {
       attr_group$create_dataset(col, v)
     }
@@ -299,8 +299,9 @@ write_data_frame <- function(attr_group, attr_df) {
     for (cat in names(categories)) {
       cat_dataset <- cats$create_dataset(cat, categories[[cat]])
       cat_dataset$create_attr("ordered", FALSE, space = H5S$new("scalar"))
-      # FIXME
-      # attr_group[[cat]]$create_attr("categories", cats$create_reference(cat))
+      attr_group[[cat]]$create_attr("categories", 
+                                    cats$create_reference(cat), 
+                                    space = H5S$new("scalar"))
     }
   }
 
