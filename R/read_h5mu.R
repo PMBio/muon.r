@@ -15,7 +15,23 @@ read_with_index <- function(dataset) {
     columns <- names(dataset)
     columns <- columns[columns != "__categories"]
 
-    col_list <- lapply(columns, function(name) dataset[[name]]$read())
+    col_list <- lapply(columns, function(name) {
+      values <- dataset[[name]]$read()
+      values_attr <- tryCatch({
+        h5attributes(dataset[[name]])
+      }, error = function(e) {
+        list()
+      })
+      if (length(values_attr) > 0) {
+        if ("categories" %in% names(values_attr)) {
+          # Make factors out of categorical data
+          ref <- values_attr$categories
+          values_labels <- ref$dereference(obj = NULL)[[1]]
+          values <- factor(as.integer(values), labels = values_labels$read())
+        }
+      }
+      values
+    })
     table <- data.frame(Reduce(cbind, col_list))
     colnames(table) <- columns
 
@@ -24,14 +40,15 @@ read_with_index <- function(dataset) {
       table <- table[,!colnames(table) %in% c(indexcol),drop=FALSE]
     }
 
+    # DEPRECATED:
+    # For consistency with other tools, this is done via references (see above)
     # Make factors out of categorical data
-    # FIXME: References should be looked at
-    if ("__categories" %in% names(dataset)) {
-      cats <- dataset[["__categories"]]
-      for (cat in names(cats)) {
-        table[[cat]] <- factor(as.integer(table[[cat]]) + 1, labels = cats[[cat]]$read())
-      }
-    }
+    # if ("__categories" %in% names(dataset)) {
+    #   cats <- dataset[["__categories"]]
+    #   for (cat in names(cats)) {
+    #     table[[cat]] <- factor(as.integer(table[[cat]]) + 1, labels = cats[[cat]]$read())
+    #   }
+    # }
 
     # Fix column order
     if ("column-order" %in% names(dataset_attr)) {
