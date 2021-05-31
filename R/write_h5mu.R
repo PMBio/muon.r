@@ -54,7 +54,7 @@ setMethod("WriteH5MU", "MultiAssayExperiment", function(object, file, overwrite)
       if (length(obsm) > 0) {
         mod_obsm <- mod_group$create_group("obsm")
         lapply(names(obsm), function(space) {
-          mod_obsm[[space]] <- obsm[[space]]
+          mod_obsm$create_dataset(space, t(obsm[[space]]))
         })
       }
     }

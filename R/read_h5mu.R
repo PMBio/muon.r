@@ -76,7 +76,7 @@ ReadH5MU <- function(file, as) {
 
       if ("obsm" %in% names(view)) {
         obsm <- lapply(names(view[["obsm"]]), function(space) {
-          view[["obsm"]][[space]]$read()
+          t(view[["obsm"]][[space]]$read())
         })
         names(obsm) <- names(view[["obsm"]])
         se <- SingleCellExperiment(assays=SimpleList(counts=X), rowData=var, colData=obs, reducedDims=obsm)

@@ -18,8 +18,8 @@ test_that("a model can be created from a simple Seurat object", {
     rownames(x) <- paste("x-var", 1:10, sep = "-")
     rownames(y) <- paste("y-var", 1:20, sep = "-")
 
-    assay_x <- CreateAssayObject(data = x)
-    assay_y <- CreateAssayObject(data = y)
+    assay_x <- CreateAssayObject(counts = x)
+    assay_y <- CreateAssayObject(counts = y)
 
     srt <- CreateSeuratObject(assay_x, assay = "x")
     srt[["y"]] <- assay_y

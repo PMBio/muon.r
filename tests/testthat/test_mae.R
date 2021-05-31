@@ -29,7 +29,7 @@ test_that("a model can be created from a simple MAE object", {
                           stringsAsFactors = FALSE)
 
     methyldat <- matrix(1:8, ncol=4,
-                        dimnames=list(c("ENST00000355076", "ENST00000383706"),
+                        dimnames=list(c("ENST00000355077", "ENST00000383706"),
                                       c("methyl1", "methyl2", "methyl3",
                                         "methyl4")))
     methylmap <- data.frame(primary = c("Jack", "Jill", "Barbara", "Bob"),
