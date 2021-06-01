@@ -94,6 +94,52 @@ read_matrix <- function(dataset) {
     }
 }
 
+read_attr_m <- function(root, attr_name, dim_names = NULL) {
+  if (is.null(dim_names)) {
+    attr_df <- read_with_index(root[[attr_name]])
+    dim_names <- rownames(attr_df)
+  }
+  attrm_name <- paste0(attr_name, "m")
+
+  attrm <- list()
+  if (attrm_name %in% names(root)) {
+    attrm <- lapply(names(root[[attrm_name]]), function(space) {
+      mx <- t(root[[attrm_name]][[space]]$read())
+      if (dim(mx)[1] == 1) {
+        mx <- t(mx)
+      }
+      rownames(mx) <- dim_names
+      mx
+    })
+    
+    names(attrm) <- names(root[[attrm_name]])
+  }
+
+  attrm
+}
+
+read_attr_p <- function(root, attr_name, dim_names = NULL) {
+  if (is.null(dim_names)) {
+    attr_df <- read_with_index(root[[attr_name]])
+    dim_names <- rownames(attr_df)
+  }
+  attrp_name <- paste0(attr_name, "p")
+
+  attrp <- list()
+  if (attrp_name %in% names(root)) {
+    attrp <- lapply(names(root[[attrp_name]]), function(graph) {
+      mx <- read_matrix(root[[attrp_name]][[graph]])
+      rownames(mx) <- dim_names
+      colnames(mx) <- dim_names
+      mx
+    })
+    
+    names(attrp) <- names(root[[attrp_name]])
+  }
+
+  attrp
+}
+
 
 OBSM2VARM <- list("X_pca" = "PCs", "X_mofa" = "LFs")
 
@@ -105,7 +151,9 @@ OBSM2VARM <- list("X_pca" = "PCs", "X_mofa" = "LFs")
 #'
 #' @exportMethod ReadH5MU
 ReadH5MU <- function(file, as) {
-  if (tolower(as) %in% c("mae", "multiassayexperiment")) {
+  if (is.null(as)) {
+    stop("Provide 'mae' or 'seurat' as the second argument.")
+  } else if (tolower(as) %in% c("mae", "multiassayexperiment")) {
 
     library(MultiAssayExperiment)
 
@@ -184,32 +232,13 @@ ReadH5MU <- function(file, as) {
     ft_metadata <- read_with_index(h5[["var"]])
 
     # Get embeddings
-    if ("obsm" %in% names(h5)) {
-      obsm_names <- names(h5[["obsm"]])
-      obsm_names <- obsm_names[!(obsm_names %in% assays)]
-      embeddings <- lapply(obsm_names, function(space) {
-        emb <- t(h5[["obsm"]][[space]]$read())
-        rownames(emb) <- rownames(metadata)
-        emb
-      })
-      names(embeddings) <- obsm_names
-    } else {
-      embeddings <- list()
-    }
+    embeddings <- read_attr_m(h5, 'obs', rownames(metadata))
 
     # Get loadings
-    if ("varm" %in% names(h5)) {
-      varm_names <- names(h5[["varm"]])
-      varm_names <- varm_names[!(varm_names %in% assays)]
-      loadings <- lapply(varm_names, function(space) {
-        ld <- t(h5[["varm"]][[space]]$read())
-        rownames(ld) <- rownames(ft_metadata)
-        ld
-      })
-      names(loadings) <- varm_names
-    } else {
-      loadings <- list()
-    }
+    loadings <- read_attr_m(h5, 'var', rownames(ft_metadata))
+
+    # Get sample and feature pairs
+    obs_pairs <- read_attr_p(h5, 'obs')
     
     # mod/.../X
     modalities <- lapply(assays, function(mod) {
@@ -234,49 +263,13 @@ ReadH5MU <- function(file, as) {
 
     # mod/.../obsm
     mod_obsm <- lapply(assays, function(mod) {
-      view <- h5[['mod']][[mod]]
-
-      obs <- read_with_index(view[['obs']])
-      if (is("obs", "data.frame"))
-        rownames(obs) <- paste(mod, rownames(obs), sep="-")
-
-      if ("obsm" %in% names(view)) {
-        obsm <- lapply(names(view[["obsm"]]), function(space) {
-          emb <- t(view[["obsm"]][[space]]$read())
-          rownames(emb) <- rownames(obs)
-          emb
-        })
-        # these will be added when concatenating lists
-        # names(obsm) <- paste(mod, names(view[["obsm"]]), sep="_")
-        names(obsm) <- names(view[["obsm"]])
-      } else {
-	       obsm <- list()
-      }
-
-      obsm
+      read_attr_m(h5[['mod']][[mod]], 'obs')
     })
     names(mod_obsm) <- assays
 
     # mod/.../varm
     mod_varm <- lapply(assays, function(mod) {
-      view <- h5[['mod']][[mod]]
-
-      var <- read_with_index(view[['var']])
-      if (is("var", "data.frame"))
-        rownames(var) <- paste(mod, rownames(var), sep="-")
-
-      if ("varm" %in% names(view)) {
-        varm <- lapply(names(view[["varm"]]), function(space) {
-          emb <- t(view[["varm"]][[space]]$read())
-          rownames(emb) <- rownames(var)
-          emb
-        })
-        names(varm) <- names(view[["varm"]])
-      } else {
-        varm <- list()
-      }
-
-      varm
+      read_attr_m(h5[['mod']][[mod]], 'var')
     })
     names(mod_varm) <- assays
 
@@ -326,6 +319,15 @@ ReadH5MU <- function(file, as) {
         )
       }
     }
+
+    # Add graphs
+    if (length(obs_pairs) > 0) {
+      srt@graphs <- lapply(obs_pairs, function(graph) {
+        graph[obs_names,obs_names,drop=FALSE]
+      })
+      names(srt@graphs) <- names(obs_pairs)
+    }
+    # TODO: Data from .uns["neighbors"].
 
     # Close the connection
     h5$close_all()
