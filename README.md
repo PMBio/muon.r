@@ -2,14 +2,14 @@
 
 Muon for R (`muon.r`) is an experimental package to provide I/O functionality for `.h5mu` files and Seurat/MultiAssayExperiment objects. 
 
-`muon.r` saves R objects with multimodal data to `.h5mu` files that can be further integrated into workflows in multiple programming languages, including the [`muon` Python library](https://github.com/gtca/muon) and the [`Muon.jl` Julia library](https://github.com/gtca/Muon.jl). `muon.r` also reads `.h5mu` files into R objects. 
+`muon.r` saves R objects with multimodal data to `.h5mu` files that can be further integrated into workflows in multiple programming languages, including the [`muon` Python library](https://github.com/pmbio/muon) and the [`Muon.jl` Julia library](https://github.com/pmbio/Muon.jl). `muon.r` also reads `.h5mu` files into R objects. 
 
 You can learn more about multimodal data containers in the [`muon` documentation](https://muon.readthedocs.io/en/latest/io/mudata.html).
 
 ## Installation
 
 ```R
-remotes::install_github("gtca/muon.r")
+remotes::install_github("pmbio/muon.r")
 ```
 
 ## Quick start
